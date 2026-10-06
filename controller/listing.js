@@ -15,6 +15,7 @@ module.exports.renderNewForm = (req,res,next)=>{
 
 
 module.exports.createRoute = async(req,res,next)=>{
+    try { 
     let url = req.file.path;
     let filename = req.file.filename;
     console.log(url, ".." , filename); 
@@ -31,18 +32,24 @@ module.exports.createRoute = async(req,res,next)=>{
     const geometry = await geocode(location);
     newlisting.geometry = geometry;
 
+    let category = newlisting.category; 
+
     let savedlisting = await newlisting.save();
     console.log(savedlisting);
 
-     const Lead = req.session.Lead;
+    const Lead = req.session.Lead;
 
-    if(!Lead){
-        req.flash("success", "New Listing Created");
-        res.redirect("/listings");
+    if(Lead && Lead.category && Lead.category.toLowerCase() === category.toLowerCase()){
+         return res.redirect("/listings/sendMail"); 
     }
-    else if(Lead == location){
-        return res.redirect("/sendMail");
-    }  
+    // else if(Lead == location){
+    //     return res.redirect("/sendMail");
+    // } 
+    }catch (error) { 
+        console.error("Error in createRoute:", error);
+        next(error); 
+    }
+     return res.redirect("/listings");
     
 };
 
@@ -83,12 +90,12 @@ module.exports.searchListing = async (req, res) => {
 
     if(allListing.length === 0){
         let qq = {q};
-        req.flash("New Lead is saved");
         req.session.Lead = {
             username: req.user.username,
             email: req.user.email,
             category: q
         }
+        console.log(req.session.Lead);
     }else{
         req.session.Lead = null;
     }
@@ -105,13 +112,18 @@ module.exports.sendMail = async (req,res) =>{
         req.flash("error", "No pending lead data found.");
         return res.redirect("/listings");
     }
+    if (!Lead.email) {
+        req.flash("error", "Lead email not found.");
+        return res.redirect("/listings");
+    }
 
     const transporter = nodemailer.createTransport({
         service: 'gmail',
     auth: {
         user: 'YOUR_SYSTEM_GMAIL@gmail.com',       
         pass: 'your-16-character-app-password' 
-            }
+            },
+        
     });
     const mailOptions = {
         from: 'Air-Bnb', 

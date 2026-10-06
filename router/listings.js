@@ -10,6 +10,7 @@ const { findById } = require("../models/review.js");
 const multer  = require('multer');
 const {storage} = require("../cloudConfig.js");
 const upload = multer({ storage});
+const { sendMail } = require('../controller/listing.js'); 
 
 
 
@@ -32,9 +33,11 @@ router
 router.get("/new",isLoggedIn,ListingController.renderNewForm);
 
 //filter route & search 
-router.get("/filter", ListingController.filterListing);
+ router.get("/filter", ListingController.filterListing);
 router.get("/search", wrapAsync(ListingController.searchListing));
-//Show, Update and Delete Route
+router.get("/search", isLoggedIn, wrapAsync(ListingController.searchListing));
+
+//Show, Update and Delete Route  
 router.route("/:id")
     .get(wrapAsync(ListingController.showRoute))
     .put(isLoggedIn,isOwner,upload.single("listing[image]"),validateListing,wrapAsync(ListingController.updateRoute))
