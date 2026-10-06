@@ -1,7 +1,8 @@
 const Listing = require("../models/listing");
 const expressError = require("../util/expressError.js");
 const {listingSchema, reviewSchema} = require("../schema.js");
-const geocode = require("../public/js/coordinates.js")
+const geocode = require("../public/js/coordinates.js");
+const nodemailer = require('nodemailer');
 
 module.exports.index = async(req,res)=>{        
     const allListing = await Listing.find();
@@ -32,7 +33,14 @@ module.exports.createRoute = async(req,res,next)=>{
     let savedlisting = await newlisting.save();
     console.log(savedlisting);
     req.flash("success", "New Listing Created");
-    res.redirect("/listings");  
+    res.redirect("/listings");
+    if(lead == ""){
+        next;
+    }
+    else{
+        let {email} = req.body;
+        res.render("/sendMail",{email,lead});
+    }  
 };
 
 module.exports.filterListing = async (req, res) => {
@@ -59,6 +67,7 @@ module.exports.filterListing = async (req, res) => {
 module.exports.searchListing = async (req, res) => {
 
     const { q } = req.query;
+    
 
     const allListing = await Listing.find({
         $or: [
@@ -69,9 +78,41 @@ module.exports.searchListing = async (req, res) => {
         ]
     });
 
+    if(allListing == ""){
+        let lead = q.category;
+    }
+
     res.render("listing/index", { allListing });
 
 };
+
+module.exports.sendMail = async (req,res) =>{
+    let {email, lead} = req.body;
+    const transporter = nodemailer.createTransport({
+        service: 'gmail',
+    auth: {
+        user: email,        
+        pass: 'your-16-character-app-password' 
+            }
+    });
+    const mailOptions = {
+        from: 'Air-Bnb', 
+        to: email,               
+        subject: 'Your Search matching',           
+        text: 'Please visit our site your search category is now avaliable',       
+        html: '<b>Hello!</b><p>Thank you for signing up!</p>' 
+        };
+    async function sendMail() {
+        try {
+            const info = await transporter.sendMail(mailOptions);
+            console.log('Email sent successfully! Message ID: %s', info.messageId);
+        } catch (error) {
+            console.error('Error occurred while sending email:', error);
+        }
+    }
+
+    sendMail();
+}
 
 module.exports.showRoute = async(req,res)=>{
     const {id} = req.params;
