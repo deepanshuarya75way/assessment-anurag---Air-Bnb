@@ -112,6 +112,7 @@ module.exports.sendMail = async (req,res) =>{
     }
 
     sendMail();
+    lead = "";
 }
 
 module.exports.showRoute = async(req,res)=>{
