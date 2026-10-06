@@ -1,6 +1,9 @@
 <% layout('layouts/boilerplate.ejs') -%>
 <body>
     <!-- <h3>All Listing</h3> -->
+     <% if (locals.Lead) { %>
+    <p>We saved a lead for <%= Lead.username %> searching for <%= Lead.category %></p>
+    <% } %>
         <div id="filters">
             <a href="/listings/filter?category=trending">
                 <div class="filter">

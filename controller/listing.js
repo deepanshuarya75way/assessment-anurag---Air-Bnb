@@ -13,6 +13,7 @@ module.exports.renderNewForm = (req,res,next)=>{
     res.render("listing/new.ejs");
 };
 
+
 module.exports.createRoute = async(req,res,next)=>{
     let url = req.file.path;
     let filename = req.file.filename;
@@ -32,14 +33,17 @@ module.exports.createRoute = async(req,res,next)=>{
 
     let savedlisting = await newlisting.save();
     console.log(savedlisting);
-    if(Lead == ""){
-        next;
+
+     const Lead = req.session.Lead;
+
+    if(!Lead){
+        req.flash("success", "New Listing Created");
+        res.redirect("/listings");
     }
     else{
-        res.render("/sendMail",{Lead});
+        return res.redirect("/sendMail");
     }  
-    req.flash("success", "New Listing Created");
-    res.redirect("/listings");
+    
 };
 
 module.exports.filterListing = async (req, res) => {
@@ -77,25 +81,34 @@ module.exports.searchListing = async (req, res) => {
         ]
     });
 
-    if(allListing == ""){
+    if(allListing.length === 0){
         let qq = {q};
-        const Lead = {
+        req.session.Lead = {
             username: req.user.username,
             email: req.user.email,
-            category: qq.location
+            category: q
         }
+    }else{
+        req.session.Lead = null;
     }
 
-    res.render("listing/index", { allListing });
+    return res.render("listing/index", { allListing,Lead:req.session.Lead });
 
 };
 
+
 module.exports.sendMail = async (req,res) =>{
-    let {Lead} = req.query;
+    const Lead = req.session.Lead;
+
+    if (!Lead) {
+        req.flash("error", "No pending lead data found.");
+        return res.redirect("/listings");
+    }
+
     const transporter = nodemailer.createTransport({
         service: 'gmail',
     auth: {
-        user: Lead.email,        
+        user: 'YOUR_SYSTEM_GMAIL@gmail.com',       
         pass: 'your-16-character-app-password' 
             }
     });
@@ -103,21 +116,22 @@ module.exports.sendMail = async (req,res) =>{
         from: 'Air-Bnb', 
         to: Lead.email,               
         subject: 'Your Search matching',           
-        text: 'Please visit our site your search category is now avaliable',       
+        text: `${Lead.username}Please visit our site your search category is now avaliable`,       
         html: '<b>Hello!</b><p>Thank you for signing up!</p>' 
         };
-    async function sendMail() {
+    
         try {
             const info = await transporter.sendMail(mailOptions);
             console.log('Email sent successfully! Message ID: %s', info.messageId);
+            req.flash("success", " email sent to the lead successfully!");
         } catch (error) {
             console.error('Error occurred while sending email:', error);
+            req.flash("error", "Failed to send notification email.");
         }
-    }
+    
 
-    sendMail();
-    Lead = "";
-    res.redirect("/listings");
+    req.session.Lead = null;
+    return  res.redirect("/listings");
 }
 
 module.exports.showRoute = async(req,res)=>{
