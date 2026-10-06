@@ -82,7 +82,7 @@ module.exports.searchListing = async (req, res) => {
         const Lead = {
             username: req.user.username,
             email: req.user.email,
-            category: qq.category
+            category: qq.location
         }
     }
 
