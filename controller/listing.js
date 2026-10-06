@@ -40,7 +40,7 @@ module.exports.createRoute = async(req,res,next)=>{
         req.flash("success", "New Listing Created");
         res.redirect("/listings");
     }
-    else{
+    else if(Lead == location){
         return res.redirect("/sendMail");
     }  
     
