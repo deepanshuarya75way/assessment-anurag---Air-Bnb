@@ -12,6 +12,7 @@ const {storage} = require("../cloudConfig.js");
 const upload = multer({ storage});
 
 
+
 const ListingController = require("../controller/listing.js");
 
 router.use(methodOverride("_method"));
@@ -33,7 +34,6 @@ router.get("/new",isLoggedIn,ListingController.renderNewForm);
 //filter route & search 
 router.get("/filter", ListingController.filterListing);
 router.get("/search", wrapAsync(ListingController.searchListing));
-
 //Show, Update and Delete Route
 router.route("/:id")
     .get(wrapAsync(ListingController.showRoute))

@@ -32,15 +32,14 @@ module.exports.createRoute = async(req,res,next)=>{
 
     let savedlisting = await newlisting.save();
     console.log(savedlisting);
-    req.flash("success", "New Listing Created");
-    res.redirect("/listings");
-    if(lead == ""){
+    if(Lead == ""){
         next;
     }
     else{
-        let {email} = req.body;
-        res.render("/sendMail",{email,lead});
+        res.render("/sendMail",{Lead});
     }  
+    req.flash("success", "New Listing Created");
+    res.redirect("/listings");
 };
 
 module.exports.filterListing = async (req, res) => {
@@ -79,7 +78,12 @@ module.exports.searchListing = async (req, res) => {
     });
 
     if(allListing == ""){
-        let lead = q.category;
+        let qq = {q};
+        const Lead = {
+            username: req.user.username,
+            email: req.user.email,
+            category: qq.category
+        }
     }
 
     res.render("listing/index", { allListing });
@@ -87,17 +91,17 @@ module.exports.searchListing = async (req, res) => {
 };
 
 module.exports.sendMail = async (req,res) =>{
-    let {email, lead} = req.body;
+    let {Lead} = req.query;
     const transporter = nodemailer.createTransport({
         service: 'gmail',
     auth: {
-        user: email,        
+        user: Lead.email,        
         pass: 'your-16-character-app-password' 
             }
     });
     const mailOptions = {
         from: 'Air-Bnb', 
-        to: email,               
+        to: Lead.email,               
         subject: 'Your Search matching',           
         text: 'Please visit our site your search category is now avaliable',       
         html: '<b>Hello!</b><p>Thank you for signing up!</p>' 
@@ -112,7 +116,8 @@ module.exports.sendMail = async (req,res) =>{
     }
 
     sendMail();
-    lead = "";
+    Lead = "";
+    res.redirect("/listings");
 }
 
 module.exports.showRoute = async(req,res)=>{
