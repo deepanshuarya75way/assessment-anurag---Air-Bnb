@@ -83,6 +83,7 @@ module.exports.searchListing = async (req, res) => {
 
     if(allListing.length === 0){
         let qq = {q};
+        req.flash("New Lead is saved");
         req.session.Lead = {
             username: req.user.username,
             email: req.user.email,
